@@ -11,69 +11,109 @@ use Frago9876543210\WebServer\WSRequest;
 use Frago9876543210\WebServer\WSResponse;
 use InvalidArgumentException;
 use pocketmine\plugin\Plugin;
-use pocketmine\plugin\PluginException;
 use XenialDan\TestPlugin\web\Page;
+#use XenialDan\TestPlugin\web\RESTPage;
 
 class MyAPI extends API
 {
 
 	public static function handleRequests(): callable
 	{
-		$template = self::getTemplatePage();
+		$webRoot = self::getWebRoot();
+		$template = self::getTemplate();
 		$pages = self::getPages();
-		$css = self::getCSS();
+		ksort($pages, SORT_STRING | SORT_ASC);
+		$mimeTypes = [
+			'.css' => 'text/css; charset=utf-8',
+			'.gif' => 'image/gif',
+			'.htm' => 'text/html; charset=utf-8',
+			'.html' => 'text/html; charset=utf-8',
+			'.jpg' => 'image/jpeg',
+			'.js' => 'application/javascript',
+			'.md' => 'text/markdown; charset=utf-8',
+			'.pdf' => 'application/pdf',
+			'.png' => 'image/png',
+			'.svg' => 'image/svg+xml',
+			'.txt' => 'text/plain; charset=utf-8',
+			//'.wasm' => 'application/wasm',
+			'.xml' => 'text/xml; charset=utf-8',
+		];
 
-		return static function (WSConnection $connection, WSRequest $request) use ($template, $pages, $css): void {
-			$pieces = explode('\\', ltrim(urldecode($request->getUri()), '\\'));
-
-			//CSS HANDLER
-			if ($pieces[0] === 'index.css') {
-				$connection->send(new WSResponse($css, 200, 'text/css'));
+		return static function (WSConnection $connection, WSRequest $request) use ($webRoot, $template, $pages, $mimeTypes): void {
+			//HELPER FUNCTIONS
+			$generateNavigation = static function () use ($pages): string {
+				$navigation = '<dt><a href="/">Home</a></dt>';
+				foreach ($pages as $pluginName => $value) {
+					$navigation .= "<dt>$pluginName</dt>";
+					foreach ($value as $pageTitle => $page) {
+						$url = '/' . urlencode(stripslashes($pluginName)) . '/' . urlencode(stripslashes($pageTitle));
+						$navigation .= "<dd><a href=\"$url\">$pageTitle</a></dd>";
+					}
+				}
+				return $navigation;
+			};
+			$getPage = static function (string $pluginName, string $pageTitle) use ($pages): Page {
+				if (!isset($pages[$pluginName])) throw new InvalidArgumentException("Plugin $pluginName registered no pages!");
+				if (!isset($pages[$pluginName][$pageTitle])) throw new InvalidArgumentException("Plugin $pluginName registered no page with the title \"$pageTitle\"");
+				return $pages[$pluginName][$pageTitle];
+			};
+			var_dump($generateNavigation(),$getPage("TestPlugin","RegisterTest"));
+			return;
+			//MIME TYPE HANDLER
+			if (array_key_exists(($ext = '.' . (pathinfo($request->getUri(), PATHINFO_EXTENSION))), $mimeTypes)) {
+				$filePath = $webRoot . $request->getUri();
+				if (file_exists($filePath)) {
+					ob_start(); // begin collecting output
+					/** @noinspection PhpIncludeInspection */
+					include $filePath;
+					$content = ob_get_clean();
+					$response = new WSResponse($content, 200, $mimeTypes[$ext]);
+				} else {
+					$response = WSResponse::error(404);
+				}
+				$connection->send($response);
 				$connection->close();
 				return;
 			}
-			var_dump($pieces);
-			//
-
+			//URI REQUESTS
+			//TODO plan how to use the overflowing "REST API" $uriParts
 			try {
-				if (count($pieces) > 2) {
+				$uriParts = explode('\\', ltrim(urldecode($request->getUri()), '\\'));
+				/** @noinspection ForgottenDebugOutputInspection */
+				var_dump($ext, $uriParts, $request->getParameters(), $request->getHeaders());
+				return;
+				//Extract requested page information from $uriParts
+				$pluginName = array_shift($uriParts);
+				$pageTitle = array_shift($uriParts);
+				return;
+				//Check which site was requested
+				if ($pluginName === null && $pageTitle === null) {
+					//send 'home' page, nothing special requested
+					$page = new Page('Home', 'Welcome to the web interface');
+				} else if (trim($pluginName ?? '') !== '' || trim($pageTitle ?? '') !== '') {
+					//send error page with invalid request
 					$connection->send(WSResponse::error(400));
 					$connection->close();
 					return;
+				} else if (count($uriParts) === 0 && is_string($pluginName) && is_string($pageTitle)) {
+					//send requested page (no REST API)
+					$page = $getPage($pluginName, $pageTitle);
+				} else {
+					//send requested page (REST API)
+					#$page = $getPage((string)$pluginName, (string)$pageTitle);
+					#if ($page instanceof RESTPage) {
+					#	$page->processRESTRequest($request->getMethod(), $uriParts);
+					#} else {
+						$connection->send(WSResponse::error(400));
+						$connection->close();
+						return;
+					#}
 				}
-				if ($template === null) throw new PluginException('Template couldn\'t be loaded');
-				//----
-				$navigation = '<dt><a href="/">Home</a></dt>';
-				foreach ($pages as $pluginName => $entry) {
-					$navigation .= "<dt>$pluginName</dt>";
-					foreach ($entry as $pageName => $page) {
-						$url = '/' . urlencode(stripslashes($pluginName)) . '/' . urlencode(stripslashes($pageName));
-						$navigation .= "<dd><a href=\"$url\">$pageName</a></dd>";
-					}
-				}
-				//----
-				$title = $template->getTitle();
-				if (count($pieces) === 1 && !empty(trim($pieces[0]))) {
-					$content = 'Accessing just the plugin name is not accepted!';
-					$title = "Error - {$title}";
-				} else if (count($pieces) === 2) {
-					[$pluginName, $pageTitle] = $pieces;
-					//-----
-					if (!isset($pages[$pluginName])) throw new InvalidArgumentException("Plugin $pluginName registered no pages!");
-					if (!isset($pages[$pluginName][$pageTitle])) throw new InvalidArgumentException("Plugin $pluginName registered no page with the title \"$pageTitle\"");
-
-					/** @var Page $page */
-					$page = $pages[$pluginName][$pageTitle];
-					//-----
-					$title = "$pluginName - {$page->getTitle()}";
-					$content = $page->getContent();
-				} else /*if (count($pieces) === 0 || empty(trim($pieces[0])))*/ {
-					$content = 'Welcome to the web interface';
-				}
-				$connection->send(new WSResponse($template->insertTemplateContent(['CSS' => $css, 'NAVIGATION' => $navigation, 'TITLE' => $title, 'CONTENT' => $content])));
+				var_dump($page);
+				$connection->send(new WSResponse($page->applyTemplatePlaceholders($template, $generateNavigation())));
 			} catch (Exception $exception) {
 				#$connection->send(new WSResponse($exception->getMessage(), 404));
-				$connection->send(new WSResponse($exception->getMessage(), 200));
+				$connection->send(new WSResponse($exception->getMessage(), 200));//TODO change?
 				#$connection->close();
 			} finally {
 				$connection->close();
@@ -85,17 +125,17 @@ class MyAPI extends API
 
 	/** @var array */
 	private static $pages = [];
-	/** @var null|Page */
-	public static $templatePage;
 	/** @var string */
-	public static $css;
+	public static $template;
+	/** @var string */
+	public static $webRoot;
 
 	/**
-	 * @return Page|null
+	 * @return string
 	 */
-	public static function getTemplatePage(): ?Page
+	public static function getTemplate(): string
 	{
-		return self::$templatePage;
+		return self::$template;
 	}
 
 	public static function registerPage(Plugin $plugin, Page $page): void
@@ -106,7 +146,6 @@ class MyAPI extends API
 		if (isset(self::$pages[$name][$title])) throw new InvalidArgumentException("A page with the title \"$title\" is already registered for the plugin $name");
 		self::$pages[$name] = self::$pages[$name] ?? [];//TODO PHP 7.4 change to ??=
 		self::$pages[$name][$title] = $page;
-		var_dump(self::$pages[$name]);
 	}
 
 	public static function getPage(array $pages, string $pluginName, string $pageName): Page
@@ -124,8 +163,8 @@ class MyAPI extends API
 		return self::$pages;
 	}
 
-	private static function getCSS(): string
+	private static function getWebRoot(): string
 	{
-		return self::$css;
+		return self::$webRoot;
 	}
 }

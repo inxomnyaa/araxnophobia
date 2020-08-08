@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace XenialDan\TestPlugin\web;
 
 use InvalidArgumentException;
+use Threaded;
 
-class Page extends \Threaded
+class Page extends Threaded
 {
 	/** @var string */
 	private $title;
 	/** @var string */
 	private $content;
+	/** @var string */
+	private $statusCode = '200';
 
 	public function __construct(string $title, string $content = '')
 	{
-		if(empty(trim($title))) throw new InvalidArgumentException('Title can not be empty');
+		if (empty(trim($title))) throw new InvalidArgumentException('Title can not be empty');
 		$this->title = htmlspecialchars(stripslashes($title));
 		$this->content = $content;
 	}
@@ -42,7 +45,8 @@ class Page extends \Threaded
 	 * The web page to load. HTML
 	 * @return string
 	 */
-	public function getContent():string {
+	public function getContent(): string
+	{
 		return $this->content;
 	}
 
@@ -54,14 +58,13 @@ class Page extends \Threaded
 	{
 	}
 
-	public static function provideFromFile(string $path):self{
-		if(!file_exists($path)) throw new InvalidArgumentException('File does not exist');
+	public static function provideFromFile(string $path): self
+	{
+		if (!file_exists($path)) throw new InvalidArgumentException('File does not exist');
 		$resource = fopen($path, 'rb');
-		if(!$resource) throw new InvalidArgumentException('Could not read file');
+		if (!$resource) throw new InvalidArgumentException('Could not read file');
 		$title = basename($path);
-		$page = self::provideFromResource($title, $resource);
-		//fclose($resource);//TODO check for memory leak
-		return $page;
+		return self::provideFromResource($title, $resource);
 	}
 
 	/**
@@ -69,24 +72,31 @@ class Page extends \Threaded
 	 * @param resource $resource
 	 * @return static
 	 */
-	public static function provideFromResource(string $title, $resource):self{
-		if(!is_resource($resource)) throw new InvalidArgumentException('$resource must be a resource!');
+	public static function provideFromResource(string $title, $resource): self
+	{
+		if (!is_resource($resource)) throw new InvalidArgumentException('$resource must be a resource!');
 		$content = stream_get_contents($resource);
 		fclose($resource);
 		return new static($title, $content);
 	}
 
 	/**
-	 * @param array|array<string, string> $contents
+	 * @param string $template
+	 * @param string $navigation
 	 * @return string
 	 */
-	public function insertTemplateContent(array $contents): string
+	public function applyTemplatePlaceholders(string $template, string $navigation): string
 	{
 		//todo optimize
-		$content = $this->getContent();
-		foreach ($contents as $key => $value) {
-			$content = str_replace(strtoupper("@$key@"), $value, $content);
+		$placeholder = [
+			'title' => $this->title,
+			'content' => $this->content,
+			'navigation' => $navigation,
+			'statusCode' => $this->statusCode,
+		];
+		foreach ($placeholder as $key => $value) {
+			$template = str_replace(strtoupper("@$key@"), $value, $template);
 		}
-		return $content;
+		return $template;
 	}
 }
