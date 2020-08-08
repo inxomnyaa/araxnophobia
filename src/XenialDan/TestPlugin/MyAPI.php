@@ -53,7 +53,7 @@ class MyAPI extends API
 					[$pluginName, $pageTitle] = $pieces;
 					//-----
 					if (!isset($pages[$pluginName])) throw new InvalidArgumentException("Plugin $pluginName registered no pages!");
-					if (!isset($pages[$pluginName][$pageTitle])) throw new InvalidArgumentException("Plugin $pluginName registered no page with the title \"$pageName\"");
+					if (!isset($pages[$pluginName][$pageTitle])) throw new InvalidArgumentException("Plugin $pluginName registered no page with the title \"$pageTitle\"");
 
 					/** @var Page $page */
 					$page = $pages[$pluginName][$pageTitle];
