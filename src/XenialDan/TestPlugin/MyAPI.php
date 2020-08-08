@@ -24,7 +24,7 @@ class MyAPI extends API
 		$css = self::getCSS();
 
 		return static function (WSConnection $connection, WSRequest $request) use ($template, $pages, $css): void {
-			$pieces = explode('\\', ltrim($request->getUri(), '\\'));
+			$pieces = explode('\\', ltrim(urldecode($request->getUri()), '\\'));
 
 			//CSS HANDLER
 			if ($pieces[0] === 'index.css') {
@@ -32,16 +32,23 @@ class MyAPI extends API
 				$connection->close();
 				return;
 			}
+			var_dump($pieces);
 			//
 
 			try {
+				if (count($pieces) > 2) {
+					$connection->send(WSResponse::error(400));
+					$connection->close();
+					return;
+				}
 				if ($template === null) throw new PluginException('Template couldn\'t be loaded');
 				//----
 				$navigation = '<dt><a href="/">Home</a></dt>';
 				foreach ($pages as $pluginName => $entry) {
 					$navigation .= "<dt>$pluginName</dt>";
 					foreach ($entry as $pageName => $page) {
-						$navigation .= "<dd><a href=\"/$pluginName/$pageName\">$pageName</a></dd>";
+						$url = '/' . urlencode(stripslashes($pluginName)) . '/' . urlencode(stripslashes($pageName));
+						$navigation .= "<dd><a href=\"$url\">$pageName</a></dd>";
 					}
 				}
 				//----

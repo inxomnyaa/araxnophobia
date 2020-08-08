@@ -16,7 +16,7 @@ class Page extends \Threaded
 	public function __construct(string $title, string $content = '')
 	{
 		if(empty(trim($title))) throw new InvalidArgumentException('Title can not be empty');
-		$this->title = $title;
+		$this->title = htmlspecialchars(stripslashes($title));
 		$this->content = $content;
 	}
 

@@ -33,9 +33,17 @@ class Loader extends PluginBase
 	{
 		$index = $this->getResource('index.html');
 		MyAPI::$templatePage = Page::provideFromResource(self::HOME, $index);
-		MyAPI::$css = file_get_contents($this->getFile().'resources/index.css');
+		MyAPI::$css = file_get_contents($this->getFile() . 'resources/index.css');
 		MyAPI::registerPage($this, new Page('RegisterTest', 'This is a registered test page'));
+		MyAPI::registerPage($this, new Page('RegisterTest2', 'This is 2nd registered test page'));
+		MyAPI::registerPage($this, new Page('Hello World!</h3><h1>HI</h1><h3>', 'This is a registered test page'));
 		self::$instance = $this;
+
+		foreach ($this->getServer()->getPluginManager()->getPlugins() as $plugin) {
+			MyAPI::registerPage($plugin, new Page($plugin->getName(), $plugin->getDataFolder()));
+		}
+		MyAPI::registerPage($this, new Page('Fish', 'This is a registered test page'));
+		MyAPI::registerPage($this, new Page('HTML Test', '<form><input type="text" name="name"><button type="submit">Send</button></form><br>'));
 	}
 
 	public function onEnable()
