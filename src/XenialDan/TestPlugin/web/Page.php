@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace XenialDan\TestPlugin\web;
 
 use InvalidArgumentException;
-use Threaded;
+use Serializable;
 
-class Page extends Threaded
+class Page implements Serializable
 {
 	/** @var string */
 	private $title;
@@ -98,5 +98,25 @@ class Page extends Threaded
 			$template = str_replace(strtoupper("@$key@"), $value, $template);
 		}
 		return $template;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function serialize()
+	{
+		return serialize([
+			'title' => $this->title,
+			'content' => $this->content,
+			'statusCode' => $this->statusCode,
+		]);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function unserialize($serialized)
+	{
+		[$this->title, $this->content, $this->statusCode] = unserialize($serialized, ['allowed_classes' => [self::class]]);
 	}
 }

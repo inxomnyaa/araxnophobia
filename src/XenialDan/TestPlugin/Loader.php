@@ -47,7 +47,7 @@ class Loader extends PluginBase
 
 	public function onEnable()
 	{
-		$web = MyAPI::startWebServer($this, MyAPI::handleRequests(), 8081);
+		$web = MyAPI::startWebServer($this, MyAPI::handleRequests(MyAPI::getWebRoot(), MyAPI::getTemplate(), MyAPI::generateNavigation()), 8081);
 		self::$web = $web;
 	}
 
