@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace XenialDan\TestPlugin;
 
+use Closure;
 use Exception;
 use Frago9876543210\WebServer\API;
 use Frago9876543210\WebServer\WSConnection;
@@ -17,7 +18,7 @@ use XenialDan\TestPlugin\web\RESTPage;
 class MyAPI extends API
 {
 
-	public static function handleRequests(string $webRoot, string $template, string $navigation): callable
+	public static function handleRequests(string $webRoot, string $template, string $navigation): Closure
 	{
 		return function (WSConnection $connection, WSRequest $request) use ($webRoot, $template, $navigation): void {
 			//MIME TYPE HANDLER

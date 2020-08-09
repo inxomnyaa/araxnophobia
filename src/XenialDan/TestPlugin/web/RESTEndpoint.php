@@ -4,33 +4,33 @@ declare(strict_types=1);
 
 namespace XenialDan\TestPlugin\web;
 
-use pocketmine\utils\Utils;
+use Closure;
 
 class RESTEndpoint
 {
 	/** @var string */
 	private $method;
-	/** @var callable */
-	private $callable;
+	/** @var Closure */
+	private $closure;
 
 	/**
 	 * RESTEndpoint constructor.
 	 * @param string $method
-	 * @param callable $callable
+	 * @param Closure $closure
 	 */
-	public function __construct(string $method, callable $callable)
+	public function __construct(string $method, Closure $closure)
 	{
 		$this->method = $method;
 		//TODO verify Closure
 		//Utils::validateCallableSignature(static function (...$params): void {
-		//}, $callable);
-		$this->callable = $callable;
+		//}, $closure);
+		$this->closure = $closure;
 	}
 
 	public function invoke(array $params): bool
 	{
 		//TODO
-		//call_user_func($this->callable, $params);
+		//call_user_func($this->closure, $params);
 		return false;
 	}
 
