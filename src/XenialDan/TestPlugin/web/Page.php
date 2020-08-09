@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace XenialDan\TestPlugin\web;
 
 use InvalidArgumentException;
-use Serializable;
 
-class Page implements Serializable
+class Page/* implements Serializable*/
 {
 	/** @var string */
 	private $title;
@@ -98,11 +97,11 @@ class Page implements Serializable
 			$template = str_replace(strtoupper("@$key@"), $value, $template);
 		}
 		return $template;
-	}
+	}/*
 
 	/**
 	 * @inheritDoc
-	 */
+	 * /
 	public function serialize()
 	{
 		return serialize([
@@ -114,9 +113,9 @@ class Page implements Serializable
 
 	/**
 	 * @inheritDoc
-	 */
+	 * /
 	public function unserialize($serialized)
 	{
 		[$this->title, $this->content, $this->statusCode] = unserialize($serialized, ['allowed_classes' => [self::class]]);
-	}
+	}*/
 }

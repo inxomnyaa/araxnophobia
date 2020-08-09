@@ -18,9 +18,9 @@ use XenialDan\TestPlugin\web\RESTPage;
 class MyAPI extends API
 {
 
-	public static function handleRequests(string $webRoot, string $template, string $navigation): Closure
+	public static function handleRequests(string $webRoot, string $template, string $navigation, array $pages): Closure
 	{
-		return function (WSConnection $connection, WSRequest $request) use ($webRoot, $template, $navigation): void {
+		return function (WSConnection $connection, WSRequest $request) use ($webRoot, $template, $navigation, $pages): void {
 			//MIME TYPE HANDLER
 			$mimeTypes = [
 				'.css' => 'text/css; charset=utf-8',
@@ -60,28 +60,31 @@ class MyAPI extends API
 				//var_dump($ext, $uriParts, $request->getParameters(), $request->getHeaders());
 				//Extract requested page information from $uriParts
 				$pluginName = array_shift($uriParts);
+				if ($pluginName === '') $pluginName = null;
 				$pageTitle = array_shift($uriParts);
 				//Check which site was requested
 				if ($pluginName === null && $pageTitle === null) {
 					//send 'home' page, nothing special requested
 					$page = new Page('Home', 'Welcome to the web interface');
-				} else if (trim($pluginName ?? '') !== '' || trim($pageTitle ?? '') !== '') {
+				} else if (trim($pluginName ?? '') === '' || trim($pageTitle ?? '') === '') {
 					//send error page with invalid request
 					$connection->send(WSResponse::error(400));
 					$connection->close();
 					return;
-				} else if (count($uriParts) === 0 && is_string($pluginName) && is_string($pageTitle)) {
-					//send requested page (no REST API)
-					$page = MyAPI::getPage($pluginName, $pageTitle);
-				} else {
-					//send requested page (REST API)
-					$page = MyAPI::getPage($pluginName, $pageTitle);
-					if ($page instanceof RESTPage) {
-						$page->processRESTRequest($request->getMethod(), $uriParts);
+				} else if (is_string($pluginName) && is_string($pageTitle)) {
+					if (count($uriParts) < 1) {
+						//send requested page (no REST API)
+						$page = MyAPI::getPage2($pages, $pluginName, $pageTitle);
 					} else {
-						$connection->send(WSResponse::error(400));
-						$connection->close();
-						return;
+						//send requested page (REST API)
+						$page = MyAPI::getPage2($pages, $pluginName, $pageTitle);
+						if ($page instanceof RESTPage) {
+							$page->processRESTRequest($request->getMethod(), $uriParts);
+						} else {
+							$connection->send(WSResponse::error(400));
+							$connection->close();
+							return;
+						}
 					}
 				}
 				$connection->send(new WSResponse($page->applyTemplatePlaceholders($template, $navigation)));
@@ -124,7 +127,14 @@ class MyAPI extends API
 
 	public static function getPage(string $pluginName, string $pageName): Page
 	{
-		$pages = MyAPI::getPages();
+		$pages = self::getPages();
+		if (!isset($pages[$pluginName])) throw new InvalidArgumentException("Plugin $pluginName registered no pages!");
+		if (!isset($pages[$pluginName][$pageName])) throw new InvalidArgumentException("Plugin $pluginName registered no page with the title \"$pageName\"");
+		return $pages[$pluginName][$pageName];
+	}
+
+	public static function getPage2(array $pages, string $pluginName, string $pageName): Page
+	{
 		if (!isset($pages[$pluginName])) throw new InvalidArgumentException("Plugin $pluginName registered no pages!");
 		if (!isset($pages[$pluginName][$pageName])) throw new InvalidArgumentException("Plugin $pluginName registered no page with the title \"$pageName\"");
 		return $pages[$pluginName][$pageName];

@@ -34,20 +34,20 @@ class Loader extends PluginBase
 		MyAPI::registerPage($this, new Page('RegisterTest', 'This is a registered test page'));
 		MyAPI::registerPage($this, new Page('Hello World!</h3><h1>HI</h1><h3>', 'This is a html tag exploit test'));
 		//Register a default site for every enabled plugin for debug & navigation testing
-		/*foreach ($this->getServer()->getPluginManager()->getPlugins() as $plugin) {
+		foreach ($this->getServer()->getPluginManager()->getPlugins() as $plugin) {
 			MyAPI::registerPage($plugin, new Page($plugin->getName(), $plugin->getDataFolder() . '<br>' . $plugin->getDescription()->getDescription()));
-		}*/
+		}
 		//Test late-registering to check if they pop up in the correct plugin section
 		MyAPI::registerPage($this, new Page('Fish', 'This is a registered test page'));
-		/*MyAPI::registerPage($this, new Page('HTML Test', '<form><input type="text" name="name"><button type="submit">Send</button></form><br>'));
-		MyAPI::registerPage($this, new Page('PHP Test', 'This should not work:</br>PHP $_GET name:"<?php print $_GET["name"];?>"'));*/
+		MyAPI::registerPage($this, new Page('HTML Test', '<form><input type="text" name="name"><button type="submit">Send</button></form><br>'));
+		MyAPI::registerPage($this, new Page('PHP Test', 'This should not work:</br>PHP $_GET name:"<?php print $_GET["name"];?>"'));
 
 		self::$instance = $this;
 	}
 
 	public function onEnable()
 	{
-		$web = MyAPI::startWebServer($this, MyAPI::handleRequests(MyAPI::getWebRoot(), MyAPI::getTemplate(), MyAPI::generateNavigation()), 8081);
+		$web = MyAPI::startWebServer($this, MyAPI::handleRequests(MyAPI::getWebRoot(), MyAPI::getTemplate(), MyAPI::generateNavigation(), MyAPI::getPages()), 8081);
 		self::$web = $web;
 	}
 
