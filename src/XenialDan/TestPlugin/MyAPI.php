@@ -74,12 +74,12 @@ class MyAPI extends API
 				} else if (is_string($pluginName) && is_string($pageTitle)) {
 					if (count($uriParts) < 1) {
 						//send requested page (no REST API)
-						$page = MyAPI::getPage2($pages, $pluginName, $pageTitle);
+						$page = MyAPI::getPage2($pages, $pluginName, $pageTitle)->invoke($request->getParameters());
 					} else {
 						//send requested page (REST API)
-						$page = MyAPI::getPage2($pages, $pluginName, $pageTitle);
+						$page = MyAPI::getPage2($pages, $pluginName, $pageTitle)->invoke($request->getParameters());
 						if ($page instanceof RESTPage) {
-							$page->processRESTRequest($request->getMethod(), $uriParts);
+							$page->processRESTRequest($request->getMethod(), $uriParts);//TODO maybe return WSResponse
 						} else {
 							$connection->send(WSResponse::error(400));
 							$connection->close();

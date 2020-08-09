@@ -39,8 +39,10 @@ class Loader extends PluginBase
 		}
 		//Test late-registering to check if they pop up in the correct plugin section
 		MyAPI::registerPage($this, new Page('Fish', 'This is a registered test page'));
-		MyAPI::registerPage($this, new Page('HTML Test', '<form><input type="text" name="name"><button type="submit">Send</button></form><br>'));
+		MyAPI::registerPage($this, new Page('HTML Test', 'HTML goes <br><br><br><br><br><br>Oh hi there sander'));
+		MyAPI::registerPage($this, new Page('Form Test', '<form><input type="text" name="name"><button type="submit">Send</button></form><br>'));
 		MyAPI::registerPage($this, new Page('PHP Test', 'This should not work:</br>PHP $_GET name:"<?php print $_GET["name"];?>"'));
+		MyAPI::registerPage($this, new TestPage('Form Invoke Test', '<form method="post"><input type="text" name="secret" placeholder="Psst: try >password<"><button type="submit">Send</button></form><br>'));
 
 		self::$instance = $this;
 	}

@@ -52,9 +52,19 @@ class Page/* implements Serializable*/
 	/**
 	 * Invoke web page with parameters on submit (i.e. on POST)
 	 * @param array $params
+	 * @return self
 	 */
-	public function invoke(array $params = []): void
+	public function invoke(array $params = []): Page
 	{
+		return $this;
+	}
+
+	/**
+	 * @param string $content
+	 */
+	public function setContent(string $content): void
+	{
+		$this->content = $content;
 	}
 
 	public static function provideFromFile(string $path): self
