@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace XenialDan\TestPlugin;
+namespace xenialdan\araxnophobia;
 
 use Closure;
 use Exception;
@@ -12,8 +12,8 @@ use Frago9876543210\WebServer\WSRequest;
 use Frago9876543210\WebServer\WSResponse;
 use InvalidArgumentException;
 use pocketmine\plugin\Plugin;
-use XenialDan\TestPlugin\web\Page;
-use XenialDan\TestPlugin\web\RESTPage;
+use xenialdan\araxnophobia\web\Page;
+use xenialdan\araxnophobia\web\RESTPage;
 
 class MyAPI extends API
 {
