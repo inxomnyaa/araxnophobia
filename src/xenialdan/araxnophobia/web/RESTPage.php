@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace XenialDan\TestPlugin\web;
+namespace xenialdan\araxnophobia\web;
 
 class RESTPage extends Page
 {
