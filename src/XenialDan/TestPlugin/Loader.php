@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace XenialDan\TestPlugin;
+namespace xenialdan\araxnophobia;
 
 use Frago9876543210\WebServer\WebServer;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginException;
-use XenialDan\TestPlugin\web\Page;
+use xenialdan\araxnophobia\web\Page;
 
 class Loader extends PluginBase
 {
