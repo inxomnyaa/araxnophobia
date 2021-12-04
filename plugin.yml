@@ -1,7 +1,7 @@
 ---
-name: TestPlugin
+name: araxnophobia
 version: 0.0.1
-main: XenialDan\TestPlugin\Loader
+main: xenialdan\araxnophobia\Loader
 api: 4.0.0
 soft-depend:
   - DEVirion
